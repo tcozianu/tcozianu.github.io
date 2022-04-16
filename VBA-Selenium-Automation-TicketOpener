@@ -1,0 +1,229 @@
+/////////////////////////////////////////////------------------------opening tickets----------------------\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+Private obj As New WebDriver
+
+Sub ChromeAuto()
+
+Dim x As Variant
+Dim data As Variant
+Dim titlu1 As Variant
+Dim titlu2 As Variant
+Dim titlu_complet As Variant
+Dim assignee As Variant
+Dim mp As Variant
+Dim ddl As Selenium.SelectElement
+Dim avs As Variant
+Dim avsf As Selenium.SelectElement
+Dim FindBy As New Selenium.By
+Dim chooseFile As WebElement
+Dim gl As Selenium.SelectElement
+
+Set asgn = Worksheets("Suppression_raw").Range("AC2")
+
+  If IsEmpty(asgn) Then
+    MsgBox ("Please insert assignee on AC2")
+    Exit Sub
+  End If
+
+Set bl = ThisWorkbook.Sheets("Suppression_raw")
+k = bl.Range("L2")
+
+  If IsEmpty(k) Then
+    MsgBox ("Please insert MP on L2")
+    Exit Sub
+  End If
+
+assignee = Worksheets("Suppression_raw").Range("AC2")
+
+answer = MsgBox("Is this AVS?", vbYesNo)
+ 
+  If answer = vbYes Then
+    avs = "AVS"
+  Else
+    avs = "Non AVS"
+  End If
+  
+
+  If k = "3" Then
+    mp = "UK"
+  ElseIf k = "4" Then
+    mp = "DE"
+  ElseIf k = "5" Then
+    mp = "FR"
+  ElseIf k = "35691" Then
+    mp = "IT"
+  Else
+    mp = "ES"
+  End If
+
+q = " "
+  
+data = InputBox("Please insert the today date following the format mm/dd/yyyy")
+
+titlu2 = "Deal Tasks - Live Suppression Check -"
+titlu_complet = titlu2 & q & avs & q & mp & q & data
+
+d = Worksheets("sim opener").Cells(Rows.Count, 1).End(xlUp).Row
+
+Set ws = ThisWorkbook.Sheets("sim opener")
+
+Sheets("sim opener").Select
+
+'----------------------------------------------------------
+'fisier-select---------------------------------------------
+'----------------------------------------------------------
+    Mfisier = Left(data, 2)
+    Dfisier = Mid(data, 4, 2)
+    Yfisier = Right(data, 4)
+    If avs = "AVS" Then
+      numefisierup = Yfisier & Mfisier & Dfisier & "_Live-Suppression check_AVS.xlsx"
+    Else
+      numefisierup = Yfisier & Mfisier & Dfisier & "_Live-Suppression check_Non_AVS.xlsx"
+    End If
+    
+    strFilePath = "C:\Users\" & assignee & "\Desktop\" & numefisierup
+'---------------------------------------------------------
+    If Dir(strFilePath) = numefisierup Then
+        obj.AddArgument ("start-maximized")
+        obj.Start "chrome", ""
+        obj.ExecuteScript ("document.body.style.zoom='60%';")
+        obj.Get "site"
+    Else
+        MsgBox ("The file isn't available on the desktop or doesn't respect the format: YYYYMMDD_Live-Suppression check_Non_AVS or YYYYMMDD_Live-Suppression check_AVS")
+    Exit Sub
+    End If
+    
+
+For i = 2 To d
+
+  While IsEmpty(ws.Cells(i, 5)) = False
+    i = i + 1
+  Wend
+
+''''''''''''''''''''''''''''''''
+'check if element loaded
+''''''''''''''''''''''''''''''''
+Do
+obj.Wait (100)
+Loop While obj.IsElementPresent(FindBy.Class("btn-large")) = False
+
+Do
+obj.Wait (100)
+Loop While obj.IsElementPresent(FindBy.Class("fileinput-button")) = False
+
+Set chooseFile = obj.FindElementByName("files[]")
+chooseFile.SendKeys (strFilePath)
+
+'wait until file uploads
+Do
+obj.Wait (100)
+Loop While obj.IsElementPresent(FindBy.Class("close-destructive")) = False
+
+'issue title'-----------------------------------------------------------------------------
+obj.FindElementById("issue-title").Clear
+obj.FindElementById("issue-title").SendKeys (titlu_complet)
+obj.Wait (100)
+
+'Count submitted'-------------------------------------------------------------------------
+obj.FindElementByXPath("//input[contains(@class,'input-medium') and contains(@data-cf-type,'policy') and contains(@data-index,'0')]").Clear
+obj.FindElementByXPath("//input[contains(@class,'input-medium') and contains(@data-cf-type,'policy') and contains(@data-index,'0')]").SendKeys (Worksheets("sim opener").Cells(i, 4).Value)
+obj.Wait (100)
+
+'gl----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Set gl = obj.FindElementByXPath("//select[contains(@class,'input-large') and contains(@data-index,'2')]").AsSelect
+gl.SelectByText (ws.Cells(i, 1))
+obj.Wait (100)
+
+'MP-------------------------------------------------------------------------------------
+Set ddl = obj.FindElementByXPath("//select[contains(@class,'input-large') and contains(@data-cf-type,'policy') and contains(@data-index,'3')]").AsSelect
+ddl.SelectByText (mp)
+obj.Wait (100)
+
+'avs or non avs-------------------------------------------------------------------------
+  If avs = "AVS" Then
+    yn = "Yes"
+  Else: yn = "No"
+  End If
+
+Set avsf = obj.FindElementByXPath("//select[contains(@class,'input-large') and contains(@data-cf-type,'policy') and contains(@data-index,'4')]").AsSelect
+avsf.SelectByText (yn)
+obj.Wait (100)
+
+'Deal quantity'----------------------------------------------------------------------------
+obj.FindElementByXPath("//input[contains(@class,'input-xlarge') and contains(@data-cf-type,'policy') and contains(@data-index,'6')]").Clear
+obj.FindElementByXPath("//input[contains(@class,'input-xlarge') and contains(@data-cf-type,'policy') and contains(@data-index,'6')]").SendKeys (Worksheets("sim opener").Cells(i, 4).Value)
+obj.Wait (100)
+
+'data sus'---------------------------------------------------------------------------------
+obj.FindElementByXPath("//*[contains(@class, 'input-medium') and contains(@data-index, '7')]").ScrollIntoView
+obj.FindElementByXPath("//*[contains(@class, 'input-medium') and contains(@data-index, '7')]").Clear
+obj.FindElementByXPath("//*[contains(@class, 'input-medium') and contains(@data-index, '7')]").SendKeys (data)
+obj.Wait (100)
+obj.FindElementByXPath("//input[contains(@class,'input-xlarge') and contains(@data-cf-type,'policy') and contains(@data-index,'6')]").Click
+obj.Wait (100)
+
+'Completed count'--------------------------------------------------------------------------
+obj.FindElementByXPath("//input[contains(@class,'input-medium') and contains(@data-cf-type,'issue') and contains(@data-index,'0')]").Clear
+obj.FindElementByXPath("//input[contains(@class,'input-medium') and contains(@data-cf-type,'issue') and contains(@data-index,'0')]").SendKeys (Worksheets("sim opener").Cells(i, 4).Value)
+obj.Wait (100)
+
+'no action needed'---------------------------------------------------------------------------
+obj.FindElementByXPath("//input[contains(@class,'input-medium') and contains(@data-cf-type,'issue') and contains(@data-index,'2')]").Clear
+obj.FindElementByXPath("//input[contains(@class,'input-medium') and contains(@data-cf-type,'issue') and contains(@data-index,'2')]").SendKeys (Worksheets("sim opener").Cells(i, 2).Value)
+obj.Wait (100)
+
+'pending vm'--------------------------------------------------------------------------------
+obj.FindElementByXPath("//input[contains(@class,'input-medium') and contains(@data-cf-type,'issue') and contains(@data-index,'3')]").Clear
+obj.FindElementByXPath("//input[contains(@class,'input-medium') and contains(@data-cf-type,'issue') and contains(@data-index,'3')]").SendKeys (Worksheets("sim opener").Cells(i, 3).Value)
+obj.Wait (100)
+
+'data jos------------------------------------------------------------------------------------
+obj.FindElementByXPath("//*[contains(@class, 'input-medium') and contains(@data-index, '8')]").ScrollIntoView
+obj.FindElementByXPath("//*[contains(@class, 'input-medium') and contains(@data-index, '8')]").Clear
+obj.FindElementByXPath("//*[contains(@class, 'input-medium') and contains(@data-index, '8')]").SendKeys (data)
+obj.Wait 150
+obj.FindElementByXPath("//input[contains(@class,'input-medium') and contains(@data-cf-type,'issue') and contains(@data-index,'2')]").Click
+obj.Wait 150
+
+'assignee------------------------------------------------------------------------------------
+obj.FindElementByClass("assignee-select-trigger").Click
+obj.Wait (100)
+obj.FindElementByClass("assignee-input").SendKeys (assignee)
+Do
+obj.Wait (200)
+Loop While obj.IsElementPresent(FindBy.Class("results")) = False
+
+obj.Wait (100)
+
+If obj.FindElementByXPath("//li[contains(@data-section-idx,'1') and contains(@data-result-idx,'0')]").Text = assignee Then
+  obj.Wait (500)
+  obj.FindElementByXPath("//li[contains(@data-section-idx,'1') and contains(@data-result-idx,'0')]").Click
+Else
+  Do
+  obj.Wait (200)
+  Loop Until obj.FindElementByXPath("//li[contains(@data-section-idx,'1') and contains(@data-result-idx,'0')]").Text = assignee
+  obj.Wait (500)
+  obj.FindElementByXPath("//li[contains(@data-section-idx,'1') and contains(@data-result-idx,'0')]").Click
+End If
+
+Do
+obj.Wait (100)
+Loop While obj.IsElementPresent(FindBy.Class("btn-large")) = False
+obj.FindElementByClass("btn-large").Click
+
+'2ndpage
+Do
+obj.Wait (200)
+Loop While obj.IsElementPresent(FindBy.XPath("//button[contains(@class, 'resolve-issue')]")) = False
+
+ws.Cells(i, 5).Value = "Done"
+
+obj.Get "site"
+
+
+'------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Next
+
+obj.Get "site"
+
+
+End Sub
