@@ -1,0 +1,549 @@
+Public obj As New WebDriver
+
+
+
+Sub main()
+
+'verif filtru
+    ActiveSheet.Range("A1:C1").AutoFilter
+
+    If Not ActiveSheet.AutoFilterMode Then
+    ActiveSheet.Range("A1:C1").AutoFilter
+    End If
+
+'sort
+   lastRow = Worksheets("Sheet1").Cells(Rows.Count, 1).End(xlUp).Row
+
+    ActiveWorkbook.Worksheets("Sheet1").AutoFilter.Sort.SortFields.Clear
+    ActiveWorkbook.Worksheets("Sheet1").AutoFilter.Sort.SortFields.Add2 Key:= _
+        Range("B1"), SortOn:=xlSortOnValues, Order:=xlAscending, DataOption:= _
+        xlSortNormal
+    With ActiveWorkbook.Worksheets("Sheet1").AutoFilter.Sort
+        .Header = xlYes
+        .MatchCase = False
+        .Orientation = xlTopToBottom
+        .SortMethod = xlPinYin
+        .Apply
+    End With
+    ActiveWorkbook.Worksheets("Sheet1").AutoFilter.Sort.SortFields.Clear
+    ActiveWorkbook.Worksheets("Sheet1").AutoFilter.Sort.SortFields.Add2 Key:= _
+        Range("C1"), SortOn:=xlSortOnValues, Order:=xlAscending, DataOption:= _
+        xlSortNormal
+    With ActiveWorkbook.Worksheets("Sheet1").AutoFilter.Sort
+        .Header = xlYes
+        .MatchCase = False
+        .Orientation = xlTopToBottom
+        .SortMethod = xlPinYin
+        .Apply
+    End With
+    
+obj.Start "chrome", ""
+obj.Window.Maximize
+
+Set ws = ThisWorkbook.Sheets("sheet1")
+
+    For i = 2 To lastRow
+
+    While IsEmpty(ws.Cells(i, 5)) = False
+      i = i + 1
+    Wend
+    
+    modelno = ws.Cells(i, 2)
+    
+     If modelno <> "" Then
+    If LCase(ws.Cells(i, 3)) = "el naturalista" Then
+      Call Natura(modelno, i)
+
+    ElseIf LCase(ws.Cells(i, 3)) = "minus" Then
+      Call minus(modelno, i)
+
+    ElseIf LCase(ws.Cells(i, 3)) = "desires" Then
+      Call desires(modelno, i)
+
+    ElseIf LCase(ws.Cells(i, 3)) = "pentole agnelli" Then
+      Call agnelli(modelno, i)
+
+    ElseIf LCase(ws.Cells(i, 3)) = "art" Then
+      Call art(modelno, i)
+
+    ElseIf LCase(ws.Cells(i, 3)) = "otterbox" Or LCase(ws.Cells(i, 3)) = "lifeproof" Then
+      Call otterbox(modelno, i)
+
+    ElseIf LCase(ws.Cells(i, 3)) = "burton" Or LCase(ws.Cells(i, 3)) = "eabaa|#burton" Then
+      Call burton(modelno, i)
+
+    ElseIf LCase(ws.Cells(i, 3)) = "rademacher" Then
+      Call rademacher(modelno, i)
+    
+    ElseIf LCase(ws.Cells(i, 3)) = "brütting" Or LCase(ws.Cells(i, 3)) = "brutting" Or LCase(ws.Cells(i, 3)) = "bruetting" Then
+      Call brutting(modelno, i)
+    
+    ElseIf LCase(ws.Cells(i, 3)) = "peppercorn" Then
+      Call peppercorn(modelno, i)
+    
+    ElseIf LCase(ws.Cells(i, 3)) = "popsockets" Then
+      Call popsockets(modelno, i)
+    End If
+    
+     Else
+      ws.Cells(i, 4).Value = "model number not found"
+      ws.Cells(i, 5).Value = "model number not found"
+     
+    End If
+    Next
+obj.Quit
+MsgBox ("done")
+
+End Sub
+
+'-------------------------==================================BRANDS========================================---------------------------
+'========================================================El naturalista==============================================================
+Sub Natura(modelno, i)
+
+Dim FindBy As New Selenium.By
+
+Set ws = ThisWorkbook.Sheets("sheet1")
+link = obj.Url
+stgLink = Left(link, 16)
+
+    If stgLink <> "https://www.elna" Then
+        obj.Get "https://www.elnaturalista.com/de/de/"
+
+        Do
+        obj.Wait (100)
+        Loop While obj.IsElementPresent(FindBy.Css("#CybotCookiebotDialogBody")) = False
+
+        obj.FindElementByCss("#CybotCookiebotDialogBodyLevelButtonAccept").Click
+    End If
+
+    If modelno = "N506" Then
+        modelno = "N5063"
+    ElseIf modelno = "5063" Then
+        modelno = "N5063"
+    End If
+
+
+    Do
+        obj.Wait (100)
+    Loop While obj.IsElementPresent(FindBy.Class("minisearch__trigger")) = False
+
+obj.FindElementByClass("minisearch__trigger").Click
+obj.FindElementById("search").Clear
+obj.FindElementById("search").SendKeys (modelno)
+
+obj.Wait (1500)
+
+    If obj.FindElementsByClass("df-card__price").Count = 0 Then
+       ws.Cells(i, 4) = "price not found"
+       ws.Cells(i, 5) = "product not found"
+       obj.FindElementByClass("minisearch__trigger").Click
+
+    Else
+       Set link = obj.FindElementsByTag("a")
+
+    If Len(modelno) = 5 Then
+        ptLink = Right(modelno, 4)
+    ElseIf Len(modelno) = 4 Then
+        ptLink = LCase(modelno)
+    End If
+
+ws.Cells(i, 4) = obj.FindElementByClass("df-card__price").Text
+ws.Cells(i, 5) = obj.FindElementByXPath("//a[contains(@href,'-" & ptLink & "')]").Attribute("href")
+
+obj.FindElementByClass("minisearch__trigger").Click
+End If
+
+End Sub
+'========================================================minus==============================================================
+Sub minus(modelno, i)
+
+Dim FindBy As New Selenium.By
+
+Set ws = ThisWorkbook.Sheets("sheet1")
+
+obj.Get "https://en.minus.dk/search?q=" & modelno
+
+Do
+obj.Wait (100)
+Loop While obj.FindElementsByClass("menu__item").Count = 0
+
+obj.Wait (1000)
+
+If obj.FindElementsByClass("btn__text").Count = 0 Then
+  ws.Cells(i, 4) = "price not found"
+  ws.Cells(i, 5) = "product not found"
+
+Else
+  ws.Cells(i, 4).Value = obj.FindElementByXPath("//*[@id='MainContent']/div[3]/div/div[1]/div/div[2]/div[3]/span/span[1]").Text
+  ws.Cells(i, 5).Value = obj.FindElementByXPath("//a[contains(@href,'/products/')]").Attribute("href")
+End If
+
+End Sub
+'========================================================desires==============================================================
+Sub desires(modelno, i)
+
+obj.Get "https://desires-fashion.com/search?q=" & modelno & "&options%5Bprefix%5D="
+
+Set ws = ThisWorkbook.Sheets("sheet1")
+
+Do
+obj.Wait (100)
+Loop While obj.FindElementsByClass("menu__item").Count = 0
+
+obj.Wait (1000)
+
+If obj.FindElementsByClass("product-collection__button-add-to-cart").Count = 0 Then
+  ws.Cells(i, 4) = "price not found"
+  ws.Cells(i, 5) = "product not found"
+
+Else
+
+  ws.Cells(i, 4).Value = obj.FindElementByXPath("//*[@id='MainContent']/div[3]/div/div/div/div[2]/div[4]/span/span[1]").Text
+  ws.Cells(i, 5).Value = obj.FindElementByXPath("//a[contains(@href,'/products/')]").Attribute("href")
+End If
+
+End Sub
+'========================================================agnelli==============================================================
+Sub agnelli(modelno, i)
+
+obj.Get "https://agnelliusashop.com/search?type=product&q=" & modelno & "&submit=Search"
+
+Set ws = ThisWorkbook.Sheets("sheet1")
+
+Do
+obj.Wait (100)
+Loop While obj.FindElementsById("footer-subscribe").Count = 0
+
+obj.Wait (1500)
+
+If obj.FindElementsByXPath("//a[contains(@href,'/products/')]").Count = 0 Then
+  ws.Cells(i, 4) = "price not found"
+  ws.Cells(i, 5) = "product not found"
+
+Else
+
+  ws.Cells(i, 4).Value = obj.FindElementByClass("price-item--regular").Text
+  ws.Cells(i, 5).Value = obj.FindElementByXPath("//a[contains(@href,'/products/')]").Attribute("href")
+End If
+
+End Sub
+'========================================================art==============================================================
+Sub art(modelno, i)
+
+Dim FindBy As New Selenium.By
+
+link = obj.Url
+stgLink = Left(link, 16)
+
+Set ws = ThisWorkbook.Sheets("sheet1")
+
+    If stgLink <> "https://www.the-" Then
+
+        obj.Get "https://www.the-art-company.com/de/de/"
+
+        
+
+        Do
+        obj.Wait (100)
+        Loop While obj.IsElementPresent(FindBy.Css("#CybotCookiebotDialogBody")) = False
+        
+        obj.FindElementByCss("#CybotCookiebotDialogBodyLevelButtonAccept").Click
+
+    End If
+
+Do
+obj.Wait (200)
+Loop While obj.IsElementPresent(FindBy.Class("minisearch__trigger")) = False
+
+obj.FindElementByClass("minisearch__trigger").Click
+obj.FindElementById("search").Clear
+obj.FindElementById("search").SendKeys (modelno)
+
+obj.Wait (1500)
+
+If obj.FindElementsByClass("df-card__price").Count = 0 Then
+  ws.Cells(i, 4) = "price not found"
+  ws.Cells(i, 5) = "product not found"
+  obj.FindElementByClass("minisearch__trigger").Click
+
+Else
+  If Len(modelno) = 3 Then
+    ptLink = 0 & modelno
+  Else
+    ptLink = modelno
+  End If
+
+  Set pret = obj.FindElementByXPath("//div[@class='df-layer__content']//div[1]//a[1]//div[1]//div[3]//span[1]")
+  ws.Cells(i, 4).Value = pret.Text
+  ws.Cells(i, 5).Value = obj.FindElementByXPath("//a[contains(@href,'-" & ptLink & "')]").Attribute("href")
+
+  obj.FindElementByClass("minisearch__trigger").Click
+End If
+
+End Sub
+'========================================================otterbox==============================================================
+Sub otterbox(modelno, i)
+
+link = obj.Url
+stgLink = Left(link, 16)
+Set ws = ThisWorkbook.Sheets("sheet1")
+    If stgLink <> "https://www.otte" Then
+
+        obj.Get "https://www.otterbox.eu/de-de/"
+
+        
+        
+        Do
+        obj.Wait (100)
+        Loop While obj.FindElementsByClass("confirm_button").Count = 0
+        obj.FindElementByClass("confirm_button").Click
+        
+        'Do
+        'obj.Wait (100)
+       ' Loop While obj.FindElementsById("redirect_prompt_dismiss").Count = 0
+       ' obj.FindElementById("redirect_prompt_dismiss").Click
+        
+        
+        'obj.FindElementByClass("close-x").Click
+    End If
+
+
+Do
+obj.Wait (100)
+Loop While obj.FindElementsById("headerSearchInput").Count = 0
+
+'If ws.Cells(i, 2).Value <> "" Then
+obj.FindElementById("headerSearchInput").Clear
+obj.FindElementById("headerSearchInput").SendKeys (modelno)
+
+obj.Wait (1500)
+
+If obj.FindElementsByClass("product-suggestion").Count = 0 Then
+ws.Cells(i, 4) = "price not found"
+ws.Cells(i, 5) = "product not found"
+
+Else
+
+ws.Cells(i, 4).Value = obj.FindElementByClass("product-standard-price").Text
+'ws.Cells(i, 5).Value = obj.FindElementByXPath("//a[contains(@href,'/products/')]").Attribute("href")
+ws.Cells(i, 5).Value = obj.FindElementByClass("product-link").Attribute("href")
+End If
+'Else
+'ws.Cells(i, 4).Value = "model number not found"
+'ws.Cells(i, 5).Value = "model number not found"
+'End If
+
+End Sub
+'========================================================burton==============================================================
+Sub burton(modelno, i)
+
+Dim FindBy As New Selenium.By
+
+link = obj.Url
+stgLink = Left(link, 16)
+
+Set ws = ThisWorkbook.Sheets("Sheet1")
+
+    If stgLink <> "https://www.burt" Then
+
+        obj.Get "https://www.burton.com/it/en/home"
+
+
+        Do
+        obj.Wait (100)
+        Loop While obj.IsElementPresent(FindBy.Css("#onetrust-accept-btn-handler")) = False
+        
+        obj.FindElementByCss("#onetrust-accept-btn-handler").Click
+        obj.FindElementByClass("stay-on-this-site").Click
+    End If
+
+    Do
+    obj.Wait (200)
+    Loop While obj.IsElementPresent(FindBy.ID("search")) = False
+
+
+    obj.FindElementById("search").Clear
+    obj.FindElementById("search").SendKeys (modelno)
+    obj.FindElementByClass("submit-btn").Click
+        obj.Wait (1200)
+        obj.Wait (1500)
+    If obj.FindElementsByXPath("/html/body/div[1]/main/div[2]/div/div[1]/h1").Count = 1 Then
+      ws.Cells(i, 4) = "price not found"
+      ws.Cells(i, 5) = "product not found"
+    Else
+      Do
+      obj.Wait (200)
+      Loop While obj.IsElementPresent(FindBy.XPath("//span[contains(@class,'standard-price')]")) = False
+      ptLink = Left(modelno, 6)
+        If obj.IsElementPresent(FindBy.XPath("//div[@class='price']//span[@class='sale-price']")) = False Then
+      ws.Cells(i, 4) = obj.FindElementByXPath("//div[@class='price']//span//span[@class='standard-price']").Text
+      ws.Cells(i, 5) = obj.FindElementByXPath("//link[contains(@href,'-" & ptLink & "')]").Attribute("href")
+        Else
+      ws.Cells(i, 4) = obj.FindElementByXPath("//div[@class='price']//span[@class='sale-price']").Text
+      ws.Cells(i, 5) = obj.FindElementByXPath("//link[contains(@href,'-" & ptLink & "')]").Attribute("href")
+    End If
+    End If
+    
+      
+
+End Sub
+'========================================================rademacher==============================================================
+Sub rademacher(modelno, i)
+
+Dim FindBy As New Selenium.By
+
+link = obj.Url
+stgLink = Left(link, 16)
+
+Set ws = ThisWorkbook.Sheets("Sheet1")
+
+    If stgLink <> "https://www.rade" Then
+        obj.Get "https://www.rademacher.de/shop"
+        Do
+        obj.Wait (200)
+        Loop While obj.IsElementPresent(FindBy.Class("btn-primary-sm")) = False
+        obj.FindElementByClass("btn-primary-sm").Click
+        obj.Wait (500)
+    End If
+
+    
+    obj.FindElementByXPath("//div[contains(@class,'widget-StickyTop--cloned widget-StickyTop--cloned---e64b6feb-b218-4d1f-aadd-c257d81f3573 widget-StickyTop--cloned---view-sticky-top widget-StickyTop--cloned---preset-default cloned')]//div[contains(@class,'widget widget-NavigationContainer widget-NavigationContainer---85960ec2-b591-4071-895c-06ba4b4dc6f4 widget-NavigationContainer---view-navigation-container widget-NavigationContainer---preset-default clearfix disallowBtInlineEditorWithin grid-row')]//input[@id='q']").Clear
+    obj.FindElementByXPath("//div[contains(@class,'widget-StickyTop--cloned widget-StickyTop--cloned---e64b6feb-b218-4d1f-aadd-c257d81f3573 widget-StickyTop--cloned---view-sticky-top widget-StickyTop--cloned---preset-default cloned')]//div[contains(@class,'widget widget-NavigationContainer widget-NavigationContainer---85960ec2-b591-4071-895c-06ba4b4dc6f4 widget-NavigationContainer---view-navigation-container widget-NavigationContainer---preset-default clearfix disallowBtInlineEditorWithin grid-row')]//input[@id='q']").SendKeys (modelno)
+    obj.FindElementByXPath("//div[contains(@class,'widget-StickyTop--cloned widget-StickyTop--cloned---e64b6feb-b218-4d1f-aadd-c257d81f3573 widget-StickyTop--cloned---view-sticky-top widget-StickyTop--cloned---preset-default cloned')]//div[contains(@class,'widget widget-NavigationContainer widget-NavigationContainer---85960ec2-b591-4071-895c-06ba4b4dc6f4 widget-NavigationContainer---view-navigation-container widget-NavigationContainer---preset-default clearfix disallowBtInlineEditorWithin grid-row')]//i[contains(@class,'widget-SearchField-search-field-submit fal fa-search')]").Click
+    
+    
+    obj.Wait (2000)
+    If obj.IsElementPresent(FindBy.XPath("//h1[contains(@data-serach-result-count,'0')]")) = True Then
+      ws.Cells(i, 4) = "price not found"
+      ws.Cells(i, 5) = "product not found"
+    Else
+        Do
+        obj.Wait (500)
+        Loop While obj.IsElementPresent(FindBy.Class("widget-ArticlePrice--price")) = False
+    End If
+
+ptLink = Left(modelno, 6)
+      Do
+      obj.Wait (200)
+      Loop While obj.IsElementPresent(FindBy.Class("widget-ArticlePrice--price")) = False
+      ws.Cells(i, 4) = obj.FindElementByClass("widget-ArticlePrice--price").Text
+      ws.Cells(i, 5) = obj.FindElementByXPath("/html/body/div[2]/div/div/div/div[2]/div[1]/div[3]/div[2]/div/div[1]/div/div/div/a").Attribute("href")
+
+' ws.Cells(i, 5) = obj.FindElementByXPath("//a[contains(@href,'-" & ptLink & "')]").Attribute("href")
+'/html/body/div[2]/div/div/div/div[2]/div[1]/div[3]/div[2]/div/div[1]/div/div/div/a
+
+End Sub
+'========================================================brutting==============================================================
+Sub brutting(modelno, i)
+
+Dim FindBy As New Selenium.By
+
+link = obj.Url
+stgLink = Left(link, 16)
+
+Set ws = ThisWorkbook.Sheets("Sheet1")
+
+    If stgLink <> "https://www.brue" Then
+        obj.Get "https://www.bruetting-sport.com/"
+        Do
+        obj.Wait (200)
+        Loop While obj.IsElementPresent(FindBy.Class("filledButton__2Lc")) = False
+        obj.FindElementByClass("filledButton__2Lc").Click
+        obj.Wait (500)
+    End If
+    
+    Do
+    obj.Wait (200)
+    Loop While obj.IsElementPresent(FindBy.Class("ac_input")) = False
+    obj.FindElementByXPath("//input[@placeholder='Suchen']").Clear
+    obj.FindElementByXPath("//input[@placeholder='Suchen']").SendKeys (modelno)
+    obj.FindElementById("search-submit-button").Click
+    
+    obj.Wait (1500)
+    
+    If obj.IsElementPresent(FindBy.XPath("//div[@class='col-xs-7']//span")) = False Then
+    ws.Cells(i, 4) = "price not found"
+    ws.Cells(i, 5) = "product not found"
+    Else
+       ' Do
+      '  obj.Wait (500)
+       ' Loop While obj.IsElementPresent(FindBy.XPath("//div[@class='col-xs-7']//span")) = False
+        ws.Cells(i, 4) = obj.FindElementByXPath("//div[@class='col-xs-7']//span").Text
+        ws.Cells(i, 5) = obj.FindElementByXPath("//link[contains(@rel,'canonical')]").Attribute("href")
+    End If
+'//div[@class='col-xs-7']//span
+
+      
+'//link[@rel,'canonical'][contains(@href,'bruetting')].Attribute("href")
+' ws.Cells(i, 5) = obj.FindElementByXPath("//a[contains(@href,'-" & ptLink & "')]").Attribute("href")
+'/html/body/div[2]/div/div/div/div[2]/div[1]/div[3]/div[2]/div/div[1]/div/div/div/a
+
+End Sub
+'========================================================peppercorn==============================================================
+Sub popsockets(modelno, i)
+
+'Dim verif As WebElement
+Dim FindBy As New Selenium.By
+
+Set ws = ThisWorkbook.Sheets("sheet1")
+
+link = obj.Url
+stgLink = Left(link, 16)
+
+Set ws = ThisWorkbook.Sheets("Sheet1")
+
+obj.Get "https://www.popsockets.de/de-de/search?q=" & modelno
+    
+    Do
+    obj.Wait (200)
+    Loop While obj.IsElementPresent(FindBy.Class("search-field")) = False
+    
+    If obj.FindElementsByXPath("//span[contains(text(),'Es tut uns leid, aber es wurden keine Ergebnisse g')]").Count <> 0 Then
+            ws.Cells(i, 4) = "price not found"
+            ws.Cells(i, 5) = "product not found"
+
+        Else
+    
+     'ws.Cells(i, 4).Value = obj.FindElementByXPath("//div[@class='slide slide-0']//span//span[@class='value']").Text
+    ' ws.Cells(i, 5).Value = obj.FindElementByXPath("//a[contains(@href,'" & modelno & "')]").Attribute("href")
+    ws.Cells(i, 4).Value = obj.FindElementByXPath("//span[@class='value']").Text
+    ws.Cells(i, 5).Value = obj.FindElementByClass("gtm-product-list").Attribute("href")
+
+    End If
+
+End Sub
+
+'========================================================popsockets==============================================================
+Sub peppercorn(modelno, i)
+
+'Dim verif As WebElement
+Dim FindBy As New Selenium.By
+
+Set ws = ThisWorkbook.Sheets("sheet1")
+
+obj.Get "https://peppercorn-fashion.com/search?q=" & modelno
+
+Do
+obj.Wait (100)
+Loop While obj.FindElementsByClass("menu__item").Count = 0
+
+obj.Wait (1000)
+
+If obj.FindElementsByClass("btn__text").Count = 0 Then
+ws.Cells(i, 4) = "price not found"
+ws.Cells(i, 5) = "product not found"
+
+Else
+    If obj.IsElementPresent(FindBy.XPath("//*[@id='MainContent']/div[3]/div/div/div/div[2]/div[3]/span/span[2]")) = True Then
+     ws.Cells(i, 4).Value = obj.FindElementByXPath("//*[@id='MainContent']/div[3]/div/div/div/div[2]/div[3]/span/span[2]").Text
+     ws.Cells(i, 5).Value = obj.FindElementByXPath("//a[contains(@href,'/products/')]").Attribute("href")
+    Else
+     ws.Cells(i, 4).Value = obj.FindElementByXPath("//*[@id='MainContent']/div[3]/div/div[1]/div/div[2]/div[3]/span/span[1]").Text
+     ws.Cells(i, 5).Value = obj.FindElementByXPath("//a[contains(@href,'/products/')]").Attribute("href")
+End If
+
+End If
+
+End Sub
+
+
