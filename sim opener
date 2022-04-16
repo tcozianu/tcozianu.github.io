@@ -86,7 +86,7 @@ Sheets("sim opener").Select
         obj.AddArgument ("start-maximized")
         obj.Start "chrome", ""
         obj.ExecuteScript ("document.body.style.zoom='60%';")
-        obj.Get "https://sim.amazon.com/issues/create?templateIssue=79814e85-ff9d-4a1a-b00a-8d223dac2245"
+        obj.Get "site"
     Else
         MsgBox ("The file isn't available on the desktop or doesn't respect the format: YYYYMMDD_Live-Suppression check_Non_AVS or YYYYMMDD_Live-Suppression check_AVS")
     Exit Sub
@@ -217,13 +217,13 @@ Loop While obj.IsElementPresent(FindBy.XPath("//button[contains(@class, 'resolve
 
 ws.Cells(i, 5).Value = "Done"
 
-obj.Get "https://sim.amazon.com/issues/create?templateIssue=79814e85-ff9d-4a1a-b00a-8d223dac2245"
+obj.Get "site"
 
 
 '------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 Next
 
-obj.Get "https://sim.amazon.com/issues/search?q=assignee%3A(" & assignee & ")+status%3A(Open)+title%3A('deal+tasks+-+live+suppression')&sort=lastUpdatedConversationDate+desc"
+obj.Get "site"
 
 
 End Sub
